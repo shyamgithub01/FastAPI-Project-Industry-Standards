@@ -11,17 +11,7 @@ app = FastAPI()
 def root():
     return {"message": "Welcome to my website"}
 
-origins = [
-    "https://www.google.com"  # allow requests from google.com console
-]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Or specific frontend origin
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 app.include_router(user.router)
 app.include_router(post.router)
