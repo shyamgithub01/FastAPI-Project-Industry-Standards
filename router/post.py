@@ -6,7 +6,7 @@ from models import model
 from utils import oauth2
 from typing import List
 
-database.Base.metadata.create_all(bind=database.engine)
+
 
 router = APIRouter(tags=["Post"])
 

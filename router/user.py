@@ -7,8 +7,7 @@ from passlib.context import CryptContext
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from utils import oauth2
 
-# Create database tables
-model.Base.metadata.create_all(bind=database.engine)
+
 
 router = APIRouter(
     tags=["User"]
