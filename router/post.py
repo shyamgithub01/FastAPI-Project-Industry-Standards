@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from schemas import post , vote 
 from db import database
 from sqlalchemy.orm import Session
-from models import model
+from models import posts , votes ,users
 from utils import oauth2
 from typing import List
 
@@ -17,19 +17,19 @@ from schemas.post import PostWithVotes  # new schema for vote data
 @router.get("/posts", response_model=List[post.PostOut])
 def get_posts(db: Session = Depends(database.get_db), current_user: int = Depends(oauth2.get_current_user)):
     posts = (
-        db.query(model.Post, func.count(model.Vote.post_id).label("votes"))
-        .join(model.Users, model.Users.id == model.Post.owner_id)
-        .outerjoin(model.Vote, model.Vote.post_id == model.Post.id)
-        .group_by(model.Post.id, model.Users.id)
+        db.query(posts.Post, func.count(votes.Vote.post_id).label("votes"))
+        .join(users.Users, users.Users.id == users.Post.owner_id)
+        .outerjoin(votes.Vote, votes.Vote.post_id == posts.Post.id)
+        .group_by(posts.Post.id, users.Users.id)
         .all()
     )
 
-    # Transform into list of dicts (Post + votes) for Pydantic
+   
     results = []
     for post, vote_count in posts:
         post_dict = post.__dict__.copy()
         post_dict["votes"] = vote_count
-        post_dict["owner"] = post.owner  # ensures "owner" is included
+        post_dict["owner"] = post.owner  
         results.append(post_dict)
 
     return results
@@ -39,7 +39,7 @@ def get_posts(db: Session = Depends(database.get_db), current_user: int = Depend
 def create_post(post_data: post.CreatePost, db: Session = Depends(database.get_db),
                 current_user: int = Depends(oauth2.get_current_user)):
     
-    new_post = model.Post(owner_id=current_user.id , **post_data.model_dump())
+    new_post = posts.Post(owner_id=current_user.id , **post_data.model_dump())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
@@ -49,7 +49,7 @@ def create_post(post_data: post.CreatePost, db: Session = Depends(database.get_d
 @router.get('/posts/{id}', response_model=post.Post)
 def get_one_post(id: int, db: Session = Depends(database.get_db),
                  current_user: int = Depends(oauth2.get_current_user)):
-    post_item = db.query(model.Post).filter(model.Post.id == id).first()
+    post_item = db.query(posts.Post).filter(posts.Post.id == id).first()
     if post_item is None:
         raise HTTPException(status_code=404, detail="Post not found")
     return post_item
@@ -59,9 +59,9 @@ def get_one_post(id: int, db: Session = Depends(database.get_db),
 def delete_post(
     id: int,
     db: Session = Depends(database.get_db),
-    current_user: model.Users = Depends(oauth2.get_current_user)
+    current_user: users.Users = Depends(oauth2.get_current_user)
 ):
-    post_item = db.query(model.Post).filter(model.Post.id == id).first()
+    post_item = db.query(posts.Post).filter(posts.Post.id == id).first()
 
     if post_item is None:
         raise HTTPException(status_code=404, detail="Post not found")
@@ -78,7 +78,7 @@ def delete_post(
 @router.put('/posts/{id}', response_model=post.Post)
 def update_post(id: int, updated_data: post.CreatePost, db: Session = Depends(database.get_db),
                 current_user: int = Depends(oauth2.get_current_user)):
-    post_query = db.query(model.Post).filter(model.Post.id == id)
+    post_query = db.query(posts.Post).filter(posts.Post.id == id)
     post_item = post_query.first()
     if post_item is None:
         raise HTTPException(status_code=404, detail="Post not found")

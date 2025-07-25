@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel , EmailStr ,ConfigDict
+from pydantic import BaseModel 
 from typing import Optional
 
 class Token(BaseModel):
