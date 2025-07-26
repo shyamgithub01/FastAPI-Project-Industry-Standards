@@ -17,7 +17,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def create_user(
     user_data: user.CreateUser,
     db: Session = Depends(database.get_db),
-    current_user: int = Depends(oauth2.get_current_user)
+    
 ):
     if len(user_data.password) <= 8:
         raise HTTPException(
